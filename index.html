@@ -21,11 +21,12 @@
 </style>
 </head>
 <body class="stack">
+	<button onclick="create()" id="firstCreateButton">CREATE NEW TEXT</button>
 	<div>
-		API URL:
-		<input type="text" id="url" size="50" readonly>
+		TEXT ID:
+		<input type="text" id="url" size="5" readonly style="font-size: 150%; padding: 5px; border-radius: 5px; background-color: #ddd; text-align: center" onclick="this.select();document.execCommand('copy');">
 		<button onclick="load()">RELOAD</button>
-		<button onclick="create()" style="float: right" id="createButton">CREATE NEW TEXT</button>
+		<button onclick="create()" style="float: right">CREATE NEW TEXT</button>
 	</div>
 	<div style="flex: 2" class="stack">
 		<div>Text:</div>
@@ -42,26 +43,28 @@
 
 <script>
 var baseUrl = 'https://api.myjson.com/bins/';
-var $url = document.getElementById('url');
+var $id = document.getElementById('url');
 var $text = document.getElementById('text');
 var $json = document.getElementById('json');
 var $saveButton = document.getElementById('saveButton');
 
 var id = location.search.slice(1);
+var url = baseUrl + id;
 
 if(id) {
-	$url.value = baseUrl + id;
+	$('#firstCreateButton').hide();
+	$id.value = id;
 	load();
 } else {
 	$('*').hide();
-	$('#createButton').parents().addBack().show();
+	$('#firstCreateButton').parents().addBack().show();
 }
 
 
 function load() {
-	if(!$url.value) return;
+	if(!$id.value) return;
 
-	$.get($url.value, function(data, textStatus, jqXHR) {
+	$.get(url, function(data, textStatus, jqXHR) {
 		console.log('loaded', data);
 		$text.value = data.map(word => word.text).join('\n');
 		$json.value = JSON.stringify(data, null, 4);
@@ -76,7 +79,7 @@ function save() {
 			index: index,
 			size: word.length,
 			lowercaseText: word.toLowerCase(),
-			letters: word.split(''),
+			//letters: word.split(''),
 			hasUpperCase: !!word.match(/[A-Z]/),
 			hasLowerCase: !!word.match(/[a-z]/),
 			hasDigits: !!word.match(/[0-9]/)
@@ -89,7 +92,7 @@ function save() {
 	$saveButton.disabled = true;
 	$saveButton.innerText = 'Saving...';
 	$.ajax({
-		url: $url.value,
+		url: url,
 		type: 'PUT',
 		data: JSON.stringify(data),
 		contentType: "application/json; charset=utf-8",
@@ -103,14 +106,14 @@ function save() {
 
 function create() {
 	$.ajax({
-	    url:"https://api.myjson.com/bins",
+	    url: baseUrl,
 	    type:"POST",
 	    data:'[]',
 	    contentType:"application/json; charset=utf-8",
 	    dataType:"json",
 	    success: function(data, textStatus, jqXHR){
 	    	$text.value='';
-	    	$url.value = data.uri;
+	    	$id.value = data.uri;
 	    	location.search = '?' + data.uri.split('/').slice(-1)[0];
 	    }
 	});
