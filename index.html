@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+ <style>
+ * {
+ 	box-sizing: border-box;
+ }
+ html, body {
+ 	height: 100%;
+	margin: 0;
+	padding: 10px;
+ }
+ .stack {
+ 	display: flex;
+ 	flex-direction: column;
+ }
+</style>
+</head>
+<body class="stack">
+	<div>
+		API URL:
+		<input type="text" id="url" size="50" readonly>
+		<button onclick="load()">RELOAD</button>
+		<button onclick="create()" style="float: right" id="createButton">CREATE NEW TEXT</button>
+	</div>
+	<div style="flex: 2" class="stack">
+		<div>Text:</div>
+		<textarea id="text" style="width: 100%; flex: 1"></textarea>
+	</div>
+	<div>
+		<button onclick="save()" id="saveButton">SAVE</button>
+		<button>TRIGGER WEBHOOK</button>
+	</div>
+	<div style="flex: 1; padding-top: 20px" class="stack">
+		<div>Json:</div>
+		<textarea id="json" style="flex: 1"></textarea>
+	</div>
+
+<script>
+var baseUrl = 'https://api.myjson.com/bins/';
+var $url = document.getElementById('url');
+var $text = document.getElementById('text');
+var $json = document.getElementById('json');
+var $saveButton = document.getElementById('saveButton');
+
+var id = location.search.slice(1);
+
+if(id) {
+	$url.value = baseUrl + id;
+	load();
+} else {
+	$('*').hide();
+	$('#createButton').parents().addBack().show();
+}
+
+
+function load() {
+	if(!$url.value) return;
+
+	$.get($url.value, function(data, textStatus, jqXHR) {
+		console.log('loaded', data);
+		$text.value = data.map(word => word.text).join('\n');
+		$json.value = JSON.stringify(data, null, 4);
+	});
+
+}
+
+function save() {
+	var data = $text.value.split('\n').map((word, index) => {
+		return {
+			text: word,
+			index: index,
+			size: word.length,
+			lowercaseText: word.toLowerCase(),
+			letters: word.split(''),
+			hasUpperCase: !!word.match(/[A-Z]/),
+			hasLowerCase: !!word.match(/[a-z]/),
+			hasDigits: !!word.match(/[0-9]/)
+		};
+	});
+	console.log('saving', data);
+
+	$json.value = JSON.stringify(data, null, 4);
+
+	$saveButton.disabled = true;
+	$saveButton.innerText = 'Saving...';
+	$.ajax({
+		url: $url.value,
+		type: 'PUT',
+		data: JSON.stringify(data),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function(data, textStatus, jqXHR){
+			$saveButton.disabled = false;
+			$saveButton.innerText = 'SAVE';
+		}
+	});
+}
+
+function create() {
+	$.ajax({
+	    url:"https://api.myjson.com/bins",
+	    type:"POST",
+	    data:'[]',
+	    contentType:"application/json; charset=utf-8",
+	    dataType:"json",
+	    success: function(data, textStatus, jqXHR){
+	    	$text.value='';
+	    	$url.value = data.uri;
+	    	location.search = '?' + data.uri.split('/').slice(-1)[0];
+	    }
+	});
+
+}
+
+</script>
+</body>
+</html>
