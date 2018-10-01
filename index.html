@@ -21,12 +21,18 @@
 </style>
 </head>
 <body class="stack">
-	<button onclick="create()" id="firstCreateButton">CREATE NEW TEXT</button>
+	<button onclick="create(this)" id="firstCreateButton">CREATE NEW TEXT</button>
 	<div>
 		TEXT ID:
 		<input type="text" id="url" size="5" readonly style="font-size: 150%; padding: 5px; border-radius: 5px; background-color: #ddd; text-align: center" onclick="this.select();document.execCommand('copy');">
 		<button onclick="load()">RELOAD</button>
-		<button onclick="create()" style="float: right">CREATE NEW TEXT</button>
+		<div style="float: right">
+			<select onchange="location.search = '?' + this.value">
+				<option value="">Load...</option>
+			</select>
+			or
+			<button onclick="create(this)">CREATE NEW TEXT</button>
+		</div>
 	</div>
 	<div style="flex: 2" class="stack">
 		<div>Text:</div>
@@ -34,7 +40,7 @@
 	</div>
 	<div>
 		<button onclick="save()" id="saveButton">SAVE</button>
-		<button>TRIGGER WEBHOOK</button>
+		<!-- <button>TRIGGER WEBHOOK</button> -->
 	</div>
 	<div style="flex: 1; padding-top: 20px" class="stack">
 		<div>Json:</div>
@@ -51,6 +57,19 @@ var $saveButton = document.getElementById('saveButton');
 var id = location.search.slice(1);
 var url = baseUrl + id;
 
+var ids = localStorage.getItem('ids');
+
+if(ids) {
+	ids = ids.split(',');
+} else {
+	ids = [];
+}
+
+if(!ids.includes(id)) {
+	ids.push(id);
+	localStorage.setItem('ids', ids.join(','));
+}
+
 if(id) {
 	$('#firstCreateButton').hide();
 	$id.value = id;
@@ -60,6 +79,10 @@ if(id) {
 	$('#firstCreateButton').parents().addBack().show();
 }
 
+
+ids.forEach(id => {
+	$('select').append($('<option>').attr('value', id).text(id));
+});
 
 function load() {
 	if(!$id.value) return;
@@ -104,7 +127,8 @@ function save() {
 	});
 }
 
-function create() {
+function create(button) {
+	button.disabled = true;
 	$.ajax({
 	    url: baseUrl,
 	    type:"POST",
