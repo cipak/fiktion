@@ -20,33 +20,33 @@
  }
 </style>
 </head>
-<body class="stack">
-	<button onclick="create(this)" id="firstCreateButton">CREATE NEW TEXT</button>
-	<div>
-		TEXT ID:
-		<input type="text" id="url" size="5" readonly style="font-size: 150%; padding: 5px; border-radius: 5px; background-color: #ddd; text-align: center" onclick="this.select();document.execCommand('copy');">
-		<button onclick="load()">RELOAD</button>
-		<div style="float: right">
-			<select onchange="location.search = '?' + this.value">
-				<option value="">Load...</option>
-			</select>
-			or
-			<button onclick="create(this)">CREATE NEW TEXT</button>
+<body>
+	<div style="position: absolute; right: 20px" id="on-new">
+		<select onchange="location.search = '?' + this.value">
+			<option value="">Load...</option>
+		</select>
+		or
+		<button onclick="create(this)">CREATE NEW TEXT</button>
+	</div>
+	<div class="stack" style="height: 100%">
+		<div>
+			TEXT ID:
+			<input type="text" id="url" size="5" readonly style="font-size: 150%; padding: 5px; border-radius: 5px; background-color: #ddd; text-align: center" onclick="this.select();document.execCommand('copy');">
+			<button onclick="load()">RELOAD</button>
+		</div>
+		<div style="flex: 2" class="stack">
+			<div>Text:</div>
+			<textarea id="text" style="width: 100%; flex: 1"></textarea>
+		</div>
+		<div>
+			<button onclick="save()" id="saveButton">SAVE</button>
+			<!-- <button>TRIGGER WEBHOOK</button> -->
+		</div>
+		<div style="flex: 1; padding-top: 20px" class="stack">
+			<div>Json:</div>
+			<textarea id="json" style="flex: 1"></textarea>
 		</div>
 	</div>
-	<div style="flex: 2" class="stack">
-		<div>Text:</div>
-		<textarea id="text" style="width: 100%; flex: 1"></textarea>
-	</div>
-	<div>
-		<button onclick="save()" id="saveButton">SAVE</button>
-		<!-- <button>TRIGGER WEBHOOK</button> -->
-	</div>
-	<div style="flex: 1; padding-top: 20px" class="stack">
-		<div>Json:</div>
-		<textarea id="json" style="flex: 1"></textarea>
-	</div>
-
 <script>
 var baseUrl = 'https://api.myjson.com/bins/';
 var $id = document.getElementById('url');
@@ -65,18 +65,16 @@ if(ids) {
 	ids = [];
 }
 
-if(!ids.includes(id)) {
-	ids.push(id);
-	localStorage.setItem('ids', ids.join(','));
-}
 
 if(id) {
-	$('#firstCreateButton').hide();
+	if(!ids.includes(id)) {
+		ids.push(id);
+		localStorage.setItem('ids', ids.join(','));
+	}
 	$id.value = id;
 	load();
 } else {
-	$('*').hide();
-	$('#firstCreateButton').parents().addBack().show();
+	$('body > div:not(:first-child)').hide();
 }
 
 
